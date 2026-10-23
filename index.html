@@ -1,0 +1,1385 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rendelői Anamnézis-asszisztens</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="Ajánlat háziorvosi rendelő részére: webes asszisztens, amely a vizit beszélgetéséből, személyes adatok nélkül, strukturált ambuláns lapot készít.">
+<meta property="og:title" content="Rendelői Anamnézis-asszisztens">
+<meta property="og:description" content="A doktor a betegre néz, nem a billentyűzetre. Ajánlat háziorvosi rendelő részére.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Instrument+Sans:wght@400..600&family=JetBrains+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@1,6..72,400..500&display=swap">
+<style>
+/* Layout: „ambuláns lap EKG-papíron” – balra zárt szerkesztőségi oszlop, a bemutató és az ábrák széles sávban; a fejlécek kétnyelvűek (magyar + dőlt latin) */
+:root{
+  --paper:#F4F7F5;
+  --sheet:#FFFFFF;
+  --ink:#0F2422;
+  --ink-2:#4B5F5B;
+  --ink-3:#768884;
+  --rule:#D3DED9;
+  --grid:rgba(196,72,60,.07);
+  --grid-strong:rgba(196,72,60,.14);
+  --scrub:#1B6B59;
+  --scrub-soft:#DDEEE8;
+  --on-scrub:#FFFFFF;
+  --trace:#C63F2A;
+  --trace-soft:#F9E3DD;
+  --patient:#3B5AA0;
+  --patient-soft:#E3E9F6;
+  --amber:#8F5B00;
+  --amber-soft:#F7ECD5;
+  --redact:#132321;
+  --on-redact:#F4F7F5;
+  --shadow:0 1px 0 rgba(15,36,34,.04), 0 14px 34px -18px rgba(15,36,34,.28);
+
+  --display:"Bricolage Grotesque","Avenir Next","Segoe UI",system-ui,sans-serif;
+  --body:"Instrument Sans","Segoe UI",system-ui,-apple-system,sans-serif;
+  --latin:"Newsreader","Iowan Old Style",Georgia,serif;
+  --mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+
+  --maxw:1200px;
+  --r:12px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0C1514; --sheet:#121F1D; --ink:#E2ECE8; --ink-2:#A3B6B1; --ink-3:#74887F; --rule:#24352F;
+    --grid:rgba(255,128,110,.045); --grid-strong:rgba(255,128,110,.09);
+    --scrub:#5CC9AE; --scrub-soft:#15342D; --on-scrub:#06110F;
+    --trace:#FF7A60; --trace-soft:#3A1D17;
+    --patient:#93ABEB; --patient-soft:#1C2742;
+    --amber:#E9B65C; --amber-soft:#33280F;
+    --redact:#DCE7E3; --on-redact:#0C1514;
+    --shadow:0 1px 0 rgba(0,0,0,.3), 0 16px 40px -20px rgba(0,0,0,.85);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0C1514; --sheet:#121F1D; --ink:#E2ECE8; --ink-2:#A3B6B1; --ink-3:#74887F; --rule:#24352F;
+  --grid:rgba(255,128,110,.045); --grid-strong:rgba(255,128,110,.09);
+  --scrub:#5CC9AE; --scrub-soft:#15342D; --on-scrub:#06110F;
+  --trace:#FF7A60; --trace-soft:#3A1D17;
+  --patient:#93ABEB; --patient-soft:#1C2742;
+  --amber:#E9B65C; --amber-soft:#33280F;
+  --redact:#DCE7E3; --on-redact:#0C1514;
+  --shadow:0 1px 0 rgba(0,0,0,.3), 0 16px 40px -20px rgba(0,0,0,.85);
+  color-scheme:dark;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;scroll-padding-top:76px}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 17px/1.6 var(--body);-webkit-font-smoothing:antialiased;overflow-x:clip}
+img,svg,canvas{max-width:100%}
+a{color:inherit}
+p,li{overflow-wrap:break-word;hyphens:auto}
+p{margin:0}
+h1,h2,h3{font-family:var(--display);font-weight:700;line-height:1.08;letter-spacing:-.02em;text-wrap:balance;margin:0}
+h1{font-size:clamp(2.35rem,5.4vw,4.5rem);font-variation-settings:"opsz" 96;letter-spacing:-.035em}
+h2{font-size:clamp(1.85rem,3.4vw,2.85rem);font-variation-settings:"opsz" 72}
+h3{font-size:1.15rem;letter-spacing:-.01em;line-height:1.2}
+.lat{font-family:var(--latin);font-style:italic;font-weight:400;letter-spacing:0}
+.mono{font-family:var(--mono);letter-spacing:0}
+.eyebrow{font-family:var(--mono);font-size:.74rem;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+.wrap{max-width:var(--maxw);margin-inline:auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.section{padding-block:clamp(64px,9vw,120px)}
+.section + .section{border-top:1px solid var(--rule)}
+.section-head{display:grid;gap:14px;max-width:62ch;margin-bottom:clamp(32px,5vw,56px)}
+.section-head .intro{color:var(--ink-2);font-size:1.08rem}
+.ecg{
+  background-color:var(--paper);
+  background-image:
+    linear-gradient(var(--grid-strong) 1px,transparent 1px),
+    linear-gradient(90deg,var(--grid-strong) 1px,transparent 1px),
+    linear-gradient(var(--grid) 1px,transparent 1px),
+    linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:40px 40px,40px 40px,8px 8px,8px 8px;
+}
+:focus-visible{outline:2px solid var(--scrub);outline-offset:2px;border-radius:4px}
+
+/* ---------- fejléc ---------- */
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:60;background:var(--paper)}
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:50;background:var(--paper);background:color-mix(in srgb,var(--paper) 88%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--rule)}
+.topbar .wrap{display:flex;align-items:center;gap:20px;min-height:60px}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:700;font-size:1.02rem;letter-spacing:-.01em;text-decoration:none;white-space:nowrap}
+.brand svg{width:28px;height:28px;flex:none}
+.nav{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;margin-left:auto;min-width:0}
+.nav::-webkit-scrollbar{display:none}
+.nav a{padding:7px 11px;border-radius:7px;text-decoration:none;font-size:.9rem;color:var(--ink-2);white-space:nowrap}
+.nav a:hover{color:var(--ink);background:var(--scrub-soft)}
+@media (max-width:640px){.brand span{display:none}}
+
+/* ---------- nyitó ---------- */
+.hero{border-bottom:1px solid var(--rule)}
+.hero-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:clamp(32px,5vw,72px);align-items:center;padding-block:clamp(44px,7vw,96px) clamp(32px,5vw,56px)}
+@media (max-width:920px){.hero-grid{grid-template-columns:minmax(0,1fr)}}
+.hero-copy{display:grid;gap:22px;justify-items:start}
+.hero h1 em{font-style:normal;color:var(--scrub);background:linear-gradient(transparent 72%,var(--scrub-soft) 72%)}
+.lede{font-size:clamp(1.05rem,1.6vw,1.2rem);color:var(--ink-2);max-width:56ch}
+.cta-row{display:flex;flex-wrap:wrap;gap:12px}
+.btn{display:inline-flex;align-items:center;gap:9px;min-height:46px;padding:11px 20px;border-radius:999px;font:600 .96rem/1 var(--body);text-decoration:none;border:1px solid transparent;cursor:pointer;transition:transform .15s ease,background-color .15s ease,border-color .15s ease}
+.btn svg{width:16px;height:16px;flex:none}
+.btn.primary{background:var(--scrub);color:var(--on-scrub)}
+.btn.ghost{border-color:var(--rule);background:var(--sheet);color:var(--ink)}
+.btn.ghost:hover{border-color:var(--scrub)}
+.btn:hover{transform:translateY(-1px)}
+
+.monitor{margin:0;background:var(--sheet);border:1px solid var(--rule);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;min-width:0}
+.monitor-head,.pane-head{display:flex;align-items:center;flex-wrap:wrap;gap:10px;padding:12px 16px;border-bottom:1px solid var(--rule);font-size:.86rem}
+.rec-dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--trace);animation:pulse 1.6s ease-out infinite;flex:none}
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--trace) 55%,transparent)}70%{box-shadow:0 0 0 9px transparent}100%{box-shadow:0 0 0 0 transparent}}
+.rec-txt{font:600 .74rem/1 var(--mono);letter-spacing:.1em;color:var(--trace)}
+.clock{font:500 .82rem/1 var(--mono);color:var(--ink-2);font-variant-numeric:tabular-nums}
+.speaker-tag{margin-left:auto;padding:4px 10px;border-radius:999px;font:600 .76rem/1.3 var(--body);background:var(--patient-soft);color:var(--patient);transition:background-color .25s,color .25s}
+.speaker-tag.doc{background:var(--scrub-soft);color:var(--scrub)}
+.speaker-tag.quiet{background:color-mix(in srgb,var(--ink-3) 16%,transparent);color:var(--ink-2)}
+.wave-holder{background-color:var(--sheet);background-image:linear-gradient(var(--grid-strong) 1px,transparent 1px),linear-gradient(90deg,var(--grid-strong) 1px,transparent 1px),linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:40px 40px,40px 40px,8px 8px,8px 8px}
+#heroWave{display:block;width:100%;height:190px}
+.monitor-foot{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding:10px 16px;border-top:1px solid var(--rule);font-size:.82rem;color:var(--ink-2)}
+.monitor-foot .mono{margin-left:auto;font-size:.74rem;color:var(--ink-3)}
+.sw{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.sw.doc{background:var(--scrub)}.sw.pat{background:var(--patient)}
+.ticker{border-top:1px solid var(--rule);overflow:hidden;white-space:nowrap;padding:11px 0;-webkit-mask-image:linear-gradient(90deg,transparent,#000 7%,#000 93%,transparent);mask-image:linear-gradient(90deg,transparent,#000 7%,#000 93%,transparent)}
+.ticker-track{display:inline-flex;gap:26px;animation:marquee 46s linear infinite;padding-left:16px}
+.ticker-track span{font-size:.95rem;color:var(--ink-2)}
+.ticker-track .lat{color:var(--scrub);font-size:1.05rem}
+@keyframes marquee{to{transform:translateX(-50%)}}
+
+.facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px;padding-bottom:clamp(36px,5vw,56px)}
+@media (max-width:820px){.facts{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.fact{display:grid;gap:6px;align-content:start;padding-top:14px;border-top:2px solid var(--scrub)}
+.fact b{font-family:var(--display);font-size:clamp(1.5rem,2.4vw,2.05rem);font-weight:700;letter-spacing:-.025em;line-height:1.05}
+.fact span{color:var(--ink-2);font-size:.92rem;line-height:1.45}
+
+/* ---------- lépések ---------- */
+.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:14px}
+@media (max-width:1080px){.steps{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:620px){.steps{grid-template-columns:minmax(0,1fr)}}
+.step{position:relative;background:var(--sheet);border:1px solid var(--rule);border-radius:var(--r);padding:18px 16px 24px;display:grid;gap:10px;align-content:start;transition:border-color .3s,transform .3s,box-shadow .3s}
+.step.active{border-color:var(--scrub);box-shadow:var(--shadow);transform:translateY(-3px)}
+.step.active::after{content:"";position:absolute;left:16px;right:16px;bottom:10px;height:2px;border-radius:2px;background:var(--scrub);transform-origin:left;animation:grow 2.6s linear forwards}
+@keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.step-num{font:500 .76rem/1 var(--mono);color:var(--ink-3)}
+.step h3{font-size:1.05rem}
+.step p{font-size:.92rem;color:var(--ink-2);line-height:1.5}
+.pill{justify-self:start;font:600 .68rem/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;padding:5px 8px;border-radius:5px}
+.pill.off{background:color-mix(in srgb,var(--ink-3) 18%,transparent);color:var(--ink-2)}
+.pill.rec{background:var(--trace-soft);color:var(--trace)}
+.pill.proc{background:var(--amber-soft);color:var(--amber)}
+.pill.doc{background:var(--scrub-soft);color:var(--scrub)}
+
+/* ---------- bemutató ---------- */
+.demo-band{border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+.demo-note{font-size:.86rem;color:var(--ink-3)}
+.demo-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:20px;align-items:start}
+.demo-grid > .pane:first-child{position:sticky;top:calc(76px + env(safe-area-inset-top,0px))}
+.demo-grid > .pane:first-child .transcript-box{max-height:min(600px,calc(100vh - 150px))}
+@media (max-width:960px){.demo-grid{grid-template-columns:minmax(0,1fr)}.demo-grid > .pane:first-child{position:static}.demo-grid > .pane:first-child .transcript-box{max-height:420px}}
+.pane{background:var(--sheet);border:1px solid var(--rule);border-radius:16px;box-shadow:var(--shadow);min-width:0;overflow:hidden}
+.pane-title{font-weight:600}
+.state{display:inline-flex;align-items:center;gap:7px;font:600 .7rem/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;padding:6px 9px;border-radius:5px;background:var(--scrub-soft);color:var(--scrub)}
+.state .rec-dot{display:none;width:7px;height:7px}
+.demo[data-phase="personal"] .state{background:color-mix(in srgb,var(--ink-3) 18%,transparent);color:var(--ink-2)}
+.demo[data-phase="rec"] .state{background:var(--trace-soft);color:var(--trace)}
+.demo[data-phase="rec"] .state .rec-dot{display:inline-block}
+.demo[data-phase="proc"] .state{background:var(--amber-soft);color:var(--amber)}
+#miniWave{margin-left:auto;width:130px;height:26px;display:block}
+.transcript-box{position:relative;overflow-y:auto;max-height:600px;padding:6px 0 10px;overscroll-behavior:contain}
+@media (max-width:960px){.transcript-box{max-height:440px}}
+.transcript{list-style:none;margin:0;padding:0}
+.offrec{margin:8px 16px 8px;padding:12px 14px;border:1px dashed var(--ink-3);border-radius:10px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 12px;align-items:center;color:var(--ink-2);font-size:.88rem;transition:border-color .3s,background-color .3s}
+.offrec svg{width:22px;height:22px;grid-row:span 2;color:var(--ink-3)}
+.offrec strong{color:var(--ink);font-weight:600}
+.offrec .bars{grid-column:2;display:flex;gap:6px;flex-wrap:wrap}
+.offrec .bars i{display:block;height:8px;border-radius:4px;background:color-mix(in srgb,var(--ink-3) 26%,transparent)}
+.demo[data-phase="personal"] .offrec{border-color:var(--trace);background:var(--trace-soft)}
+.demo[data-phase="personal"] .offrec svg{color:var(--trace)}
+.line{display:grid;grid-template-columns:44px 58px minmax(0,1fr);gap:10px;padding:8px 16px;align-items:baseline;transition:background-color .3s}
+@media (max-width:520px){.line{grid-template-columns:auto minmax(0,1fr);gap:2px 10px}.line p{grid-column:1/-1}}
+.ts{font:400 .74rem/1.6 var(--mono);color:var(--ink-3);font-variant-numeric:tabular-nums}
+.who{font:600 .7rem/1.9 var(--mono);letter-spacing:.07em;text-transform:uppercase}
+.who.doc{color:var(--scrub)}.who.pat{color:var(--patient)}
+.line p{font-size:.96rem;line-height:1.55;hyphens:manual}
+.fix,mark.redact{hyphens:none;white-space:nowrap}
+.line.src{background:var(--scrub-soft)}
+.w{transition:opacity .18s ease}
+.demo.running .line:not(.shown){display:none}
+.demo.running .w:not(.on){opacity:0}
+.line.shown{animation:lineIn .3s ease}
+@keyframes lineIn{from{background-color:var(--scrub-soft)}to{background-color:transparent}}
+mark.redact{background:none;color:inherit;position:relative;white-space:nowrap;padding:0 1px}
+mark.redact::after{content:attr(data-label);position:absolute;inset:-1px -3px;display:flex;align-items:center;justify-content:center;border-radius:3px;background:var(--redact);color:var(--on-redact);font:600 .62rem/1 var(--mono);letter-spacing:.06em;transform:scaleX(0);transform-origin:left;transition:transform .5s cubic-bezier(.7,0,.2,1)}
+.demo:not(.running) mark.redact::after,mark.redact.hit::after{transform:scaleX(1)}
+.fix .raw{text-decoration:underline wavy var(--amber);text-decoration-thickness:1.5px;text-underline-offset:3px}
+.fix .ok{display:none;font-family:var(--latin);font-style:italic;font-size:1.06em;color:var(--scrub);background:var(--scrub-soft);border-radius:3px;padding:0 3px}
+.demo:not(.running) .fix .raw,.fix.fixed .raw{display:none}
+.demo:not(.running) .fix .ok,.fix.fixed .ok{display:inline}
+.fix.fixed .ok{animation:fixIn .45s ease}
+@keyframes fixIn{from{opacity:0;filter:blur(3px)}to{opacity:1;filter:none}}
+
+.proc{list-style:none;margin:0;padding:12px 16px;display:flex;flex-wrap:wrap;gap:6px;border-bottom:1px solid var(--rule)}
+.proc li{display:inline-flex;align-items:center;gap:7px;font-size:.78rem;padding:5px 10px 5px 8px;border-radius:999px;border:1px solid var(--rule);color:var(--ink-3);transition:color .25s,border-color .25s,background-color .25s}
+.proc .ic{position:relative;width:13px;height:13px;border-radius:50%;border:1.5px solid currentColor;flex:none}
+.proc li.active{color:var(--amber);border-color:var(--amber);background:var(--amber-soft)}
+.proc li.active .ic{border-right-color:transparent;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.demo:not(.running) .proc li,.proc li.done{color:var(--scrub);border-color:color-mix(in srgb,var(--scrub) 40%,transparent)}
+.demo:not(.running) .proc .ic,.proc li.done .ic{background:var(--scrub);border-color:var(--scrub)}
+.demo:not(.running) .proc .ic::after,.proc li.done .ic::after{content:"";position:absolute;left:3.5px;top:1px;width:3px;height:6px;border:solid var(--sheet);border-width:0 1.5px 1.5px 0;transform:rotate(45deg)}
+
+.sheet{padding:18px 20px 22px;display:grid;gap:16px}
+.sheet-top{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
+.sheet-top h3{font-size:1.15rem}
+.sheet-meta{font:400 .74rem/1.4 var(--mono);color:var(--ink-3)}
+.sheet-meta b{font-weight:500;color:var(--ink-2)}
+.sheet-hint{font-size:.84rem;color:var(--ink-3);margin-top:-6px}
+.sheet-wait{display:none;align-items:center;gap:10px;padding:12px 14px;border-radius:10px;border:1px dashed var(--rule);font-size:.9rem;color:var(--ink-2)}
+.sheet-wait .ic{width:14px;height:14px;border-radius:50%;border:2px solid var(--amber);border-right-color:transparent;animation:spin .9s linear infinite;flex:none}
+.demo.running[data-phase="personal"] .sheet-wait,.demo.running[data-phase="rec"] .sheet-wait,.demo.running[data-phase="proc"] .sheet-wait{display:flex}
+.demo.running[data-phase="personal"] .sheet-hint,.demo.running[data-phase="rec"] .sheet-hint,.demo.running[data-phase="proc"] .sheet-hint{display:none}
+.btn-sm{display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:6px 11px;border-radius:8px;border:1px solid var(--rule);background:var(--sheet);color:var(--ink);font:600 .78rem/1 var(--body);cursor:pointer;transition:border-color .15s,background-color .15s,color .15s}
+.btn-sm svg{width:13px;height:13px}
+.btn-sm:hover{border-color:var(--scrub);color:var(--scrub)}
+.btn-sm.done{background:var(--scrub);border-color:var(--scrub);color:var(--on-scrub)}
+.btn-sm.solid{background:var(--scrub);border-color:var(--scrub);color:var(--on-scrub)}
+.sheet-top .btn-sm.solid{margin-left:auto}
+.sec{display:grid;gap:6px;padding-top:14px;border-top:1px solid var(--rule);transition:opacity .3s}
+.sec-head{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 10px}
+.sec-head h3{font-size:1rem}
+.sec-head .lat{color:var(--ink-3);font-size:1rem}
+.sec-head .btn-sm{margin-left:auto;min-height:28px;padding:4px 9px}
+.sec ul{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.sec li{padding:4px 8px;margin-inline:-8px;border-radius:7px;font-size:.95rem;line-height:1.5;cursor:pointer;transition:background-color .2s,opacity .35s,transform .35s}
+.sec li:hover,.sec li.pin{background:var(--scrub-soft)}
+.kv{display:grid;grid-template-columns:10.5em minmax(0,1fr);gap:12px}
+@media (max-width:520px){.kv{grid-template-columns:minmax(0,1fr);gap:0}}
+.kv .k{color:var(--ink-2);font-size:.86rem;line-height:1.75}
+.code{display:inline-block;font:600 .74rem/1 var(--mono);padding:4px 6px;border-radius:4px;background:var(--scrub-soft);color:var(--scrub);margin-left:6px;vertical-align:1px}
+.code-note{font-size:.8rem;color:var(--amber)}
+.srcnote{display:none;font:500 .7rem/1 var(--mono);color:var(--scrub);margin-left:8px;white-space:nowrap}
+.sec li.pin .srcnote{display:inline}
+.demo.running .sec:not(.on) .sec-head{opacity:.3}
+.demo.running .sec li:not(.on),.demo.running .check-box li:not(.on){opacity:0;transform:translateY(5px)}
+.sec li.on{animation:flash 1.3s ease}
+@keyframes flash{from{background-color:var(--scrub-soft)}to{background-color:transparent}}
+.check-box{background:var(--amber-soft);border-radius:10px;padding:14px 16px;display:grid;gap:6px;transition:opacity .3s}
+.demo.running .check-box:not(.on){opacity:.3}
+.check-box h3{font-size:.95rem;color:var(--amber)}
+.check-box ul{margin:0;padding-left:1.1em;display:grid;gap:4px;font-size:.88rem;color:var(--ink)}
+.check-box li{transition:opacity .35s,transform .35s;cursor:default}
+.check-box p{font-size:.8rem;color:var(--ink-2)}
+
+.player{margin-top:18px;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:16px;align-items:center;background:var(--sheet);border:1px solid var(--rule);border-radius:16px;padding:10px 12px}
+@media (max-width:760px){.player{grid-template-columns:minmax(0,1fr)}}
+.pctrl{display:flex;flex-wrap:wrap;gap:8px}
+.pbtn{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:8px 14px;border-radius:10px;border:1px solid var(--rule);background:var(--paper);color:var(--ink);font:600 .86rem/1 var(--body);cursor:pointer;transition:border-color .15s,background-color .15s}
+.pbtn svg{width:14px;height:14px;flex:none}
+.pbtn:hover{border-color:var(--scrub)}
+.pbtn.main{background:var(--scrub);border-color:var(--scrub);color:var(--on-scrub);min-width:132px;justify-content:center}
+.pbtn[aria-pressed="true"]{border-color:var(--scrub);color:var(--scrub)}
+.progress{position:relative;height:6px;border-radius:3px;background:var(--rule);overflow:hidden}
+.progress i{position:absolute;inset:0 auto 0 0;width:100%;background:var(--scrub);border-radius:3px}
+.phases{display:flex;justify-content:space-between;gap:8px;margin-top:8px;font:500 .66rem/1.2 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+.phases span.on{color:var(--ink)}
+
+/* ---------- adatvédelem ---------- */
+.worlds{display:grid;grid-template-columns:minmax(0,1fr) 128px minmax(0,1fr);align-items:stretch}
+@media (max-width:880px){.worlds{grid-template-columns:minmax(0,1fr)}}
+.world{background:var(--sheet);border:1px solid var(--rule);border-radius:16px;padding:22px;display:grid;gap:14px;align-content:start;min-width:0}
+.world .eyebrow{color:var(--ink-3)}
+.world h3{font-size:1.3rem}
+.world > p{color:var(--ink-2);font-size:.95rem}
+.data-list{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.datum{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;background:var(--paper);font-size:.93rem;min-width:0}
+.datum svg{width:16px;height:16px;flex:none;color:var(--ink-3)}
+.datum .mono{margin-left:auto;font-size:.74rem;color:var(--ink-3);white-space:nowrap}
+.record{border:1px solid var(--rule);border-radius:10px;padding:14px;display:grid;gap:8px;background:var(--paper)}
+.record-top{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px;font:500 .74rem/1.3 var(--mono);color:var(--ink-3)}
+.record-top b{color:var(--scrub);font-weight:600}
+.record p{font-size:.9rem;line-height:1.5}
+.record .gone{font:500 .74rem/1.3 var(--mono);color:var(--trace)}
+.barrier{position:relative;display:grid;place-items:center;min-height:120px}
+.barrier::before{content:"";position:absolute;top:6%;bottom:6%;left:calc(50% - 1px);width:2px;background:repeating-linear-gradient(180deg,var(--trace) 0 8px,transparent 8px 16px);background-size:2px 16px;animation:dashY 1.1s linear infinite}
+@keyframes dashY{to{background-position:0 16px}}
+.barrier-badge{position:relative;z-index:1;display:grid;justify-items:center;gap:6px;background:var(--paper);border:1px solid var(--trace);color:var(--trace);border-radius:12px;padding:10px 12px;font:600 .68rem/1.25 var(--mono);text-transform:uppercase;letter-spacing:.06em;text-align:center}
+.barrier-badge svg{width:20px;height:20px}
+@media (max-width:880px){.barrier{min-height:104px}.barrier::before{top:0;bottom:0}}
+.meet{margin-top:18px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;align-items:center;padding:16px 18px;border-radius:14px;background:var(--scrub-soft)}
+.meet svg{width:30px;height:30px;color:var(--scrub)}
+.meet p{font-size:.98rem}
+.meet strong{color:var(--scrub)}
+.honest{margin-top:clamp(40px,6vw,64px);max-width:68ch;font-size:1.02rem;color:var(--ink-2);padding-left:16px;border-left:2px solid var(--trace)}
+.layers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px 24px;margin-top:32px}
+@media (max-width:900px){.layers{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.layers{grid-template-columns:minmax(0,1fr)}}
+.layer{display:grid;gap:8px;align-content:start;padding-top:16px;border-top:1px solid var(--rule)}
+.layer svg{width:26px;height:26px;color:var(--scrub)}
+.layer h3{font-size:1.04rem}
+.layer p{font-size:.93rem;color:var(--ink-2);line-height:1.55}
+
+.life{margin-top:clamp(40px,6vw,64px);background:var(--sheet);border:1px solid var(--rule);border-radius:16px;padding:22px 22px 26px}
+.life h3{margin-bottom:6px}
+.life-track{position:relative;list-style:none;margin:22px 0 0;padding:30px 0 0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px}
+.life-track::before{content:"";position:absolute;left:0;right:0;top:10px;height:2px;background:linear-gradient(90deg,var(--scrub),var(--scrub) 78%,var(--trace))}
+.life-pulse{position:absolute;top:5px;left:0;width:12px;height:12px;border-radius:50%;background:var(--scrub);box-shadow:0 0 0 5px var(--scrub-soft);animation:travel 9s cubic-bezier(.45,0,.55,1) infinite}
+@keyframes travel{0%{left:0;opacity:1}86%{left:calc(100% - 12px);opacity:1;background:var(--trace)}100%{left:calc(100% - 12px);opacity:0;background:var(--trace)}}
+.life-step{position:relative;display:grid;gap:4px;align-content:start}
+.life-step::before{content:"";position:absolute;top:-25px;left:0;width:12px;height:12px;border-radius:50%;background:var(--sheet);border:2px solid var(--scrub)}
+.life-step.del::before{border-color:var(--trace);background:var(--trace)}
+.life-step b{font:500 .74rem/1.3 var(--mono);color:var(--ink-3)}
+.life-step span{font-size:.93rem;line-height:1.45}
+.life-step.del span{color:var(--trace);font-weight:600}
+@media (max-width:760px){
+  .life-track{grid-template-columns:minmax(0,1fr);padding:0 0 0 30px;gap:20px}
+  .life-track::before{left:9px;right:auto;top:4px;bottom:4px;width:2px;height:auto;background:linear-gradient(180deg,var(--scrub),var(--scrub) 78%,var(--trace))}
+  .life-step::before{top:4px;left:-26px}
+  .life-pulse{left:4px;top:0;animation-name:travelY}
+}
+@keyframes travelY{0%{top:0;opacity:1}86%{top:calc(100% - 12px);opacity:1;background:var(--trace)}100%{top:calc(100% - 12px);opacity:0;background:var(--trace)}}
+
+.nots{margin-top:clamp(40px,6vw,64px);display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:24px}
+@media (max-width:820px){.nots{grid-template-columns:minmax(0,1fr)}}
+.nots ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width:560px){.nots ul{grid-template-columns:minmax(0,1fr)}}
+.nots li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:10px;font-size:.95rem;line-height:1.5;padding:14px;border-radius:10px;border:1px solid var(--rule);background:var(--sheet)}
+.nots li svg{width:18px;height:18px;color:var(--trace);margin-top:3px}
+
+/* ---------- technika ---------- */
+.arch{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));row-gap:24px}
+.node{position:relative;background:var(--sheet);border:1px solid var(--rule);border-radius:12px;padding:15px 14px 16px;display:grid;gap:7px;align-content:start;margin-right:24px;min-width:0}
+.node:last-child{margin-right:0}
+.node:not(:last-child)::after{content:"";position:absolute;right:-25px;top:50%;width:24px;height:2px;background:repeating-linear-gradient(90deg,var(--scrub) 0 5px,transparent 5px 9px);background-size:9px 2px;animation:flowX .7s linear infinite}
+@keyframes flowX{to{background-position:9px 0}}
+@keyframes flowY{to{background-position:0 9px}}
+.node .where{font:500 .68rem/1.3 var(--mono);color:var(--ink-3);text-transform:uppercase;letter-spacing:.07em}
+.node h3{font-size:.98rem}
+.node p{font-size:.85rem;color:var(--ink-2);line-height:1.45}
+.node.eu{border-color:color-mix(in srgb,var(--scrub) 45%,var(--rule))}
+.eu-tag{justify-self:start;display:inline-flex;align-items:center;gap:5px;font:600 .66rem/1 var(--mono);padding:4px 6px;border-radius:4px;background:var(--scrub-soft);color:var(--scrub)}
+.eu-tag svg{width:11px;height:11px}
+@media (max-width:1080px){
+  .arch{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .node:nth-child(3n){margin-right:0}
+  .node:nth-child(3n)::after{display:none}
+}
+@media (max-width:620px){
+  .arch{grid-template-columns:minmax(0,1fr)}
+  .node{margin-right:0}
+  .node:not(:last-child)::after,.node:nth-child(3n):not(:last-child)::after{display:block;right:auto;left:calc(50% - 1px);top:auto;bottom:-25px;width:2px;height:24px;background:repeating-linear-gradient(180deg,var(--scrub) 0 5px,transparent 5px 9px);background-size:2px 9px;animation-name:flowY}
+}
+.tech-notes{margin-top:28px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media (max-width:760px){.tech-notes{grid-template-columns:minmax(0,1fr)}}
+.tnote{padding:18px;border-radius:12px;background:var(--sheet);border:1px solid var(--rule);display:grid;gap:8px;align-content:start}
+.tnote h3{font-size:1rem}
+.tnote p{font-size:.93rem;color:var(--ink-2)}
+
+/* ---------- ütemterv ---------- */
+.road{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;counter-reset:ph}
+@media (max-width:960px){.road{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.road{grid-template-columns:minmax(0,1fr)}}
+.phase{background:var(--sheet);border:1px solid var(--rule);border-radius:12px;padding:18px;display:grid;gap:10px;align-content:start;grid-template-rows:auto auto 1fr auto}
+.phase .when{display:flex;justify-content:space-between;gap:8px;font:600 .72rem/1 var(--mono);color:var(--scrub);text-transform:uppercase;letter-spacing:.08em}
+.phase .when span{color:var(--ink-3);font-weight:500}
+.phase ul{margin:0;padding-left:1.1em;color:var(--ink-2);font-size:.9rem;display:grid;gap:4px;align-content:start}
+.phase .out{font-size:.86rem;border-top:1px dashed var(--rule);padding-top:10px}
+.phase .out b{color:var(--scrub)}
+.road-note{margin-top:14px;font-size:.84rem;color:var(--ink-3)}
+
+/* ---------- költség ---------- */
+.calc{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:stretch}
+@media (max-width:860px){.calc{grid-template-columns:minmax(0,1fr)}}
+.calc-in{background:var(--sheet);border:1px solid var(--rule);border-radius:16px;padding:22px;display:grid;gap:24px;align-content:start}
+.field{display:grid;gap:10px}
+.field label{display:flex;justify-content:space-between;gap:12px;font-weight:600;font-size:.95rem}
+.field output{font:600 .95rem/1.4 var(--mono);color:var(--scrub);font-variant-numeric:tabular-nums;white-space:nowrap}
+.field small{font-size:.8rem;color:var(--ink-3)}
+input[type="range"]{width:100%;accent-color:var(--scrub);margin:0}
+.calc-out{background:var(--scrub);color:var(--on-scrub);border-radius:16px;padding:26px;display:grid;gap:16px;align-content:start}
+.calc-out .eyebrow{color:inherit;opacity:.8}
+.big{font-family:var(--display);font-size:clamp(2.2rem,4.4vw,3.3rem);font-weight:700;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums}
+.calc-out .sub{font-size:.95rem;opacity:.9}
+.split{display:grid;gap:8px}
+.split-bar{display:flex;height:12px;border-radius:6px;overflow:hidden;background:color-mix(in srgb,var(--on-scrub) 20%,transparent)}
+.split-bar i{display:block;height:100%;transition:width .35s ease}
+.split-bar i:first-child{background:var(--on-scrub)}
+.split-bar i:last-child{background:color-mix(in srgb,var(--on-scrub) 50%,transparent)}
+.split-legend{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 14px;font-size:.84rem;opacity:.92}
+.split-legend b{font-family:var(--mono);font-weight:600}
+.calc-out .fine{font-size:.82rem;opacity:.82;border-top:1px solid color-mix(in srgb,var(--on-scrub) 30%,transparent);padding-top:12px}
+
+/* ---------- egyeztetés + GYIK ---------- */
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:clamp(32px,5vw,64px);align-items:start}
+@media (max-width:900px){.two{grid-template-columns:minmax(0,1fr)}}
+.two h2{font-size:clamp(1.6rem,2.8vw,2.2rem);margin-bottom:22px}
+.todo{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.todo li{display:grid;grid-template-columns:24px minmax(0,1fr);gap:12px;padding:14px 16px;background:var(--sheet);border:1px solid var(--rule);border-radius:12px}
+.todo .box{width:20px;height:20px;border:2px solid var(--scrub);border-radius:5px;margin-top:2px}
+.todo .who-does{display:block;font:600 .68rem/1.4 var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);margin-bottom:2px}
+.todo p{font-size:.94rem}
+details.faq{border-top:1px solid var(--rule);padding:16px 0}
+details.faq:last-of-type{border-bottom:1px solid var(--rule)}
+details.faq summary{cursor:pointer;font-weight:600;font-size:1.02rem;list-style:none;display:flex;justify-content:space-between;align-items:baseline;gap:16px}
+details.faq summary::-webkit-details-marker{display:none}
+details.faq summary::after{content:"+";font:500 1.2rem/1 var(--mono);color:var(--scrub);transition:transform .2s;flex:none}
+details.faq[open] summary::after{transform:rotate(45deg)}
+details.faq p{margin-top:10px;color:var(--ink-2);max-width:68ch;font-size:.96rem}
+
+footer{border-top:1px solid var(--rule);padding-block:34px calc(34px + env(safe-area-inset-bottom,0px));color:var(--ink-2);font-size:.88rem}
+footer .wrap{display:flex;flex-wrap:wrap;gap:10px 28px;justify-content:space-between}
+footer b{font-family:var(--display);color:var(--ink)}
+
+.toast{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom,0px));transform:translate(-50%,16px);opacity:0;background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:999px;font-size:.9rem;font-weight:500;transition:opacity .25s,transform .25s;z-index:80;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="Anamnézis-asszisztens, ugrás az oldal tetejére">
+      <svg viewBox="0 0 28 28" aria-hidden="true"><rect x="1" y="1" width="26" height="26" rx="7" style="fill:var(--scrub)"/><path d="M4.5 15h4.2l2-5.2 3.1 9.4 2.5-6.6 1.6 2.4h5.6" style="fill:none;stroke:var(--on-scrub)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>Anamnézis-asszisztens</span>
+    </a>
+    <nav class="nav" aria-label="Fejezetek">
+      <a href="#mukodes">Működés</a>
+      <a href="#demo">Bemutató</a>
+      <a href="#adatvedelem">Adatvédelem</a>
+      <a href="#technika">Technika</a>
+      <a href="#utemterv">Ütemterv</a>
+      <a href="#koltseg">Költség</a>
+      <a href="#kerdesek">Kérdések</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+
+<!-- ================= NYITÓ ================= -->
+<section class="hero ecg">
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
+      <p class="eyebrow">Ajánlat háziorvosi rendelő részére · 2026. október</p>
+      <h1>A doktor a betegre néz, <em>nem a billentyűzetre.</em></h1>
+      <p class="lede">Webes asszisztens, amely a vizit beszélgetéséből strukturált ambuláns lapot készít, helyes magyar és latin szakszóhasználattal. Személyes adatot nem rögzít. Az orvos átnézi a lapot, és egy kattintással beilleszti a megszokott rendelői szoftverbe.</p>
+      <div class="cta-row">
+        <a class="btn primary" href="#demo"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z" fill="currentColor"/></svg>Nézze meg működés közben</a>
+        <a class="btn ghost" href="#adatvedelem">Hogyan védjük az adatokat?</a>
+      </div>
+    </div>
+
+    <figure class="monitor" aria-label="Szemléltetés: élő hangfelvétel két beszélővel">
+      <div class="monitor-head">
+        <span class="rec-dot" aria-hidden="true"></span>
+        <span class="rec-txt">REC</span>
+        <span class="clock" id="heroClock">00:01:24</span>
+        <span class="speaker-tag" id="heroSpeaker">Beteg beszél</span>
+      </div>
+      <div class="wave-holder"><canvas id="heroWave" aria-hidden="true"></canvas></div>
+      <div class="monitor-foot">
+        <span><span class="sw doc"></span>Orvos</span>
+        <span><span class="sw pat"></span>Beteg</span>
+        <span class="mono">hu-HU · latin orvosi szókincs</span>
+      </div>
+      <div class="ticker" aria-hidden="true">
+        <div class="ticker-track">
+          <span>produktív köhögés</span><span class="lat">subfebrilitas</span><span>RR 145/90 Hgmm</span><span class="lat">hypertonia arterialis</span><span>amlodipin 5 mg 1×1</span><span class="lat">cholecystectomia</span><span>penicillin-érzékenység</span><span class="lat">status praesens</span><span>J20.9</span><span class="lat">bronchitis acuta</span><span>ambroxol 30 mg 3×1</span><span class="lat">diabetes mellitus</span><span>kontroll 3 nap múlva</span>
+          <span>produktív köhögés</span><span class="lat">subfebrilitas</span><span>RR 145/90 Hgmm</span><span class="lat">hypertonia arterialis</span><span>amlodipin 5 mg 1×1</span><span class="lat">cholecystectomia</span><span>penicillin-érzékenység</span><span class="lat">status praesens</span><span>J20.9</span><span class="lat">bronchitis acuta</span><span>ambroxol 30 mg 3×1</span><span class="lat">diabetes mellitus</span><span>kontroll 3 nap múlva</span>
+        </div>
+      </div>
+    </figure>
+  </div>
+
+  <div class="wrap facts">
+    <div class="fact"><b>Nincs név</b><span>sem TAJ-szám, sem lakcím: a felvétel csak a személyes adatok után indul</span></div>
+    <div class="fact"><b>~30 mp</b><span>a vizit végétől a kész, átnézhető ambuláns lapig</span></div>
+    <div class="fact"><b>EU-n belül</b><span>fut minden feldolgozás, fizetős üzleti szolgáltatókkal</span></div>
+    <div class="fact"><b>48 óra</b><span>után a szöveg automatikusan és véglegesen törlődik</span></div>
+  </div>
+</section>
+
+<!-- ================= MŰKÖDÉS ================= -->
+<section class="section" id="mukodes">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Működés</p>
+      <h2>Egy vizit hat lépésben</h2>
+      <p class="intro">A rendelés menete nem változik. Az orvos egyetlen gombbal indítja a felvételt, és a vizit végén kész, átnézhető ambuláns lapot kap.</p>
+    </div>
+    <ol class="steps">
+      <li class="step"><span class="step-num">01</span><span class="pill off">Nem rögzít</span><h3>Személyes adatok</h3><p>Név, TAJ-szám, lakcím felvétele a megszokott módon. A rendszer ilyenkor nem hallgat.</p></li>
+      <li class="step"><span class="step-num">02</span><span class="pill rec">Rögzít</span><h3>Felvétel indítása</h3><p>Egy gombnyomás a rendelői gépen. Ha újra személyes adat kerül szóba: Szünet.</p></li>
+      <li class="step"><span class="step-num">03</span><span class="pill rec">Rögzít</span><h3>Beszélgetés</h3><p>Kérdések, válaszok, vizsgálat közbeni diktálás. A rendszer szétválasztja, ki beszél.</p></li>
+      <li class="step"><span class="step-num">04</span><span class="pill proc">Feldolgoz</span><h3>Befejezés</h3><p>Kb. 30 másodperc: átírás, kitakarás, latin szakkifejezések javítása, a lap szerkesztése.</p></li>
+      <li class="step"><span class="step-num">05</span><span class="pill doc">Orvos</span><h3>Átnézés</h3><p>Az orvos ellenőrzi és javítja a lapot. Minden sornál látja, melyik mondatból származik.</p></li>
+      <li class="step"><span class="step-num">06</span><span class="pill doc">Orvos</span><h3>Beillesztés</h3><p>Szakaszonként vagy egyben kimásolja, és beilleszti a rendelői szoftverbe.</p></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ================= BEMUTATÓ ================= -->
+<section class="section demo-band ecg" id="demo">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Bemutató</p>
+      <h2>Nézze meg egy kitalált vizittel</h2>
+      <p class="intro">Háziorvosi vizit akut köhögéssel. A rendszer szétválasztja a beszélőket, kitakarja az elhangzó személyes adatokat, kijavítja a félrehallott latin kifejezéseket, és ambuláns lapot szerkeszt. A lap egy sorára mutatva kiemelődik, melyik mondatból származik.</p>
+      <p class="demo-note">A beszélgetés, a nevek és a számok kitaláltak.</p>
+    </div>
+
+    <div class="demo" id="demoRoot" data-phase="done">
+      <div class="demo-grid">
+        <!-- átirat -->
+        <div class="pane">
+          <div class="pane-head">
+            <span class="pane-title">Átirat</span>
+            <span class="state"><span class="rec-dot" aria-hidden="true"></span><span id="recLabel">Kész</span></span>
+            <span class="clock" id="demoClock">01:53</span>
+            <canvas id="miniWave" aria-hidden="true"></canvas>
+          </div>
+          <div class="transcript-box" id="tbox">
+            <ol class="transcript">
+              <li class="offrec-line">
+                <div class="offrec">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 11.5 5.4M19 11a7 7 0 0 1-.4 2.3M12 18v3M3 3l18 18"/></svg>
+                  <span><strong>Személyes adatok felvétele.</strong> A rendszer ilyenkor nem rögzít.</span>
+                  <span class="bars" aria-hidden="true"><i style="width:34%"></i><i style="width:22%"></i><i style="width:28%"></i></span>
+                </div>
+              </li>
+              <li class="line" data-t="00:00"><span class="ts">00:00</span><span class="who doc">Orvos</span><p>Jó, akkor most mondja el, mi a panasza.</p></li>
+              <li class="line" data-t="00:04"><span class="ts">00:04</span><span class="who pat">Beteg</span><p>Három napja köhögök, és tegnap este belázasodtam, harmincnyolc-öt volt.</p></li>
+              <li class="line" data-t="00:11"><span class="ts">00:11</span><span class="who doc">Orvos</span><p>Köpet van? Milyen színű?</p></li>
+              <li class="line" data-t="00:14"><span class="ts">00:14</span><span class="who pat">Beteg</span><p>Van, sárgás. És fáj a torkom, nyelni is nehéz.</p></li>
+              <li class="line" data-t="00:20"><span class="ts">00:20</span><span class="who doc">Orvos</span><p>Nehézlégzés, mellkasi fájdalom?</p></li>
+              <li class="line" data-t="00:23"><span class="ts">00:23</span><span class="who pat">Beteg</span><p>Az nincs, csak ha sokat köhögök, akkor szúr egy kicsit.</p></li>
+              <li class="line" data-t="00:29"><span class="ts">00:29</span><span class="who doc">Orvos</span><p>Milyen betegségei vannak? Szed rendszeresen gyógyszert?</p></li>
+              <li class="line" data-t="00:33"><span class="ts">00:33</span><span class="who pat">Beteg</span><p>Magas a vérnyomásom, arra amlodipint szedek, az ötöset, reggel. És 2019-ben kivették az epémet.</p></li>
+              <li class="line" data-t="00:42"><span class="ts">00:42</span><span class="who doc">Orvos</span><p>Tehát <span class="fix" title="A hangfelismerés után javítva"><span class="raw">kolecisztektómia</span><span class="ok">cholecystectomia</span></span> 2019-ben. Gyógyszerérzékenység?</p></li>
+              <li class="line" data-t="00:47"><span class="ts">00:47</span><span class="who pat">Beteg</span><p>A penicillintől kiütéses lettem.</p></li>
+              <li class="line" data-t="00:51"><span class="ts">00:51</span><span class="who doc">Orvos</span><p>Dohányzik? A családban van valamilyen betegség?</p></li>
+              <li class="line" data-t="00:54"><span class="ts">00:54</span><span class="who pat">Beteg</span><p>Napi tíz szálat. Apámnak cukorbetegsége volt. A lányom, <mark class="redact" data-label="[NÉV]">Kovács Eszter</mark>, is most volt beteg, ő is így köhögött.</p></li>
+              <li class="line" data-t="01:04"><span class="ts">01:04</span><span class="who pat">Beteg</span><p>Ha kellene valami, a <mark class="redact" data-label="[TELEFONSZÁM]">06 30 123 4567</mark>-es számon elér.</p></li>
+              <li class="line" data-t="01:09"><span class="ts">01:09</span><span class="who doc">Orvos</span><p>Rendben, megvizsgálom. Torok <span class="fix" title="A hangfelismerés után javítva"><span class="raw">hiperémiás</span><span class="ok">hyperaemiás</span></span>, tonsillák nem nagyobbak. Pulmo: <span class="fix" title="A hangfelismerés után javítva"><span class="raw">vezikuláris</span><span class="ok">vesicularis</span></span> légzés, kétoldalt szórt száraz zörejek, crepitatio nincs. Cor: ritmusos, tiszta szívhangok.</p></li>
+              <li class="line" data-t="01:31"><span class="ts">01:31</span><span class="who doc">Orvos</span><p>RR száznegyvenöt per kilencven, pulzus nyolcvannyolc, testhő harminchét-kilenc.</p></li>
+              <li class="line" data-t="01:38"><span class="ts">01:38</span><span class="who doc">Orvos</span><p>Véleményem szerint <span class="fix" title="A hangfelismerés után javítva"><span class="raw">akut bronkitisz</span><span class="ok">bronchitis acuta</span></span>. Ambroxolt kap, harminc milligramm, naponta háromszor. Lázra paracetamol, ötszáz milligramm, legfeljebb napi négyszer. És igyon sokat.</p></li>
+              <li class="line" data-t="01:53"><span class="ts">01:53</span><span class="who doc">Orvos</span><p>Ha három nap múlva nem javul, vagy rosszabb lesz, jöjjön vissza, akkor mellkasröntgen is lesz.</p></li>
+            </ol>
+          </div>
+        </div>
+
+        <!-- ambuláns lap -->
+        <div class="pane">
+          <ul class="proc" aria-label="Feldolgozási lépések">
+            <li><span class="ic"></span>Átirat lezárva</li>
+            <li><span class="ic"></span>Hangfájl törölve</li>
+            <li data-act="redact"><span class="ic"></span>Személyes adatok kitakarva</li>
+            <li data-act="fix"><span class="ic"></span>Latin kifejezések javítva</li>
+            <li><span class="ic"></span>Ambuláns lap kész</li>
+          </ul>
+          <article class="sheet" id="sheet">
+            <div class="sheet-top">
+              <h3>Ambuláns lap, tervezet</h3>
+              <span class="sheet-meta">Vizit: <b>V-7K2Q</b> · törlés <b class="countdown">47:59:12</b> múlva</span>
+              <button class="btn-sm solid" type="button" id="copyAll"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="5" y="5" width="9" height="9" rx="2"/><path d="M11 5V3.5A1.5 1.5 0 0 0 9.5 2h-6A1.5 1.5 0 0 0 2 3.5v6A1.5 1.5 0 0 0 3.5 11H5"/></svg>Teljes lap másolása</button>
+            </div>
+            <p class="sheet-hint">Mutasson egy sorra, vagy koppintson rá: az átiratban kiemelődik a forrása.</p>
+            <p class="sheet-wait"><span class="ic" aria-hidden="true"></span>A lap a vizit végén, a feldolgozás után készül el.</p>
+
+            <section class="sec">
+              <div class="sec-head"><h3>Jelen panasz</h3><button class="btn-sm copy" type="button">Másolás</button></div>
+              <ul>
+                <li data-src="1,2,3">3 napja fennálló produktív köhögés, sárgás köpet.</li>
+                <li data-src="1">Tegnap este láz, 38,5 °C.</li>
+                <li data-src="3">Torokfájás, nyelési nehezítettség.</li>
+                <li data-src="4,5">Köhögéskor enyhe, szúró mellkasi fájdalom. Nehézlégzés nincs.</li>
+              </ul>
+            </section>
+
+            <section class="sec">
+              <div class="sec-head"><h3>Anamnézis</h3><span class="lat">Anamnesis</span><button class="btn-sm copy" type="button">Másolás</button></div>
+              <ul>
+                <li class="kv" data-src="7"><span class="k">Ismert betegségek</span><span class="v">Hypertonia arterialis</span></li>
+                <li class="kv" data-src="7,8"><span class="k">Műtétek</span><span class="v">Cholecystectomia (2019)</span></li>
+                <li class="kv" data-src="7"><span class="k">Rendszeres gyógyszer</span><span class="v">Amlodipin 5 mg, 1×1 reggel</span></li>
+                <li class="kv" data-src="9"><span class="k">Gyógyszerallergia</span><span class="v">Penicillin (bőrkiütés)</span></li>
+                <li class="kv" data-src="11"><span class="k">Családi anamnézis</span><span class="v">Apa: diabetes mellitus</span></li>
+                <li class="kv" data-src="11"><span class="k">Környezet</span><span class="v">Családtagnál hasonló légúti tünetek</span></li>
+                <li class="kv" data-src="10,11"><span class="k">Életmód</span><span class="v">Dohányzik, napi 10 szál</span></li>
+              </ul>
+            </section>
+
+            <section class="sec">
+              <div class="sec-head"><h3>Fizikális vizsgálat</h3><span class="lat">Status praesens</span><button class="btn-sm copy" type="button">Másolás</button></div>
+              <ul>
+                <li class="kv" data-src="13"><span class="k">Torok</span><span class="v">Hyperaemiás, tonsillák nem nagyobbak</span></li>
+                <li class="kv" data-src="13"><span class="k">Pulmo</span><span class="v">Vesicularis légzés, kétoldalt szórt száraz zörejek, crepitatio nincs</span></li>
+                <li class="kv" data-src="13"><span class="k">Cor</span><span class="v">Ritmusos, tiszta szívhangok</span></li>
+                <li class="kv" data-src="14"><span class="k">Vitális paraméterek</span><span class="v">RR 145/90 Hgmm, P 88/min, T 37,9 °C</span></li>
+              </ul>
+            </section>
+
+            <section class="sec">
+              <div class="sec-head"><h3>Vélemény</h3><span class="lat">Diagnosis</span><button class="btn-sm copy" type="button">Másolás</button></div>
+              <ul>
+                <li data-src="15" data-copy="Bronchitis acuta (BNO: J20.9)">Bronchitis acuta <span class="code">J20.9</span> <span class="code-note">BNO-javaslat, ellenőrizendő</span></li>
+              </ul>
+            </section>
+
+            <section class="sec">
+              <div class="sec-head"><h3>Terápia</h3><span class="lat">Therapia</span><button class="btn-sm copy" type="button">Másolás</button></div>
+              <ul>
+                <li data-src="15">Ambroxol 30 mg, 3×1</li>
+                <li data-src="15">Paracetamol 500 mg láz esetén, legfeljebb 4×1 naponta</li>
+                <li data-src="15">Bő folyadékbevitel</li>
+              </ul>
+            </section>
+
+            <section class="sec">
+              <div class="sec-head"><h3>Javaslat, kontroll</h3><button class="btn-sm copy" type="button">Másolás</button></div>
+              <ul>
+                <li data-src="16">Kontroll 3 nap múlva, ha nem javul vagy romlik; ekkor mellkasröntgen.</li>
+              </ul>
+            </section>
+
+            <aside class="check-box">
+              <h3>Ellenőrizendő</h3>
+              <ul>
+                <li>2 kitakarás: [NÉV], [TELEFONSZÁM]. Ezek nem kerültek a lapra.</li>
+                <li>4 szakkifejezés javítva a hangfelismerés után, például kolecisztektómia → cholecystectomia.</li>
+                <li>A BNO-kód a rendszer javaslata, az orvos hagyja jóvá.</li>
+              </ul>
+              <p>Ez a doboz csak tájékoztat, nem kerül a másolt szövegbe.</p>
+            </aside>
+          </article>
+        </div>
+      </div>
+
+      <div class="player" role="group" aria-label="Bemutató vezérlése">
+        <div class="pctrl">
+          <button class="pbtn main" type="button" id="playBtn"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z" fill="currentColor"/></svg><span>Lejátszás</span></button>
+          <button class="pbtn" type="button" id="restartBtn"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M2.5 8a5.5 5.5 0 1 0 1.7-4"/><path d="M2.5 2.5v3.2h3.2"/></svg>Újra</button>
+        </div>
+        <div>
+          <div class="progress" aria-hidden="true"><i id="pfill"></i></div>
+          <div class="phases" id="phases"><span>Személyes adatok</span><span>Beszélgetés</span><span>Feldolgozás</span><span class="on">Kész lap</span></div>
+        </div>
+        <div class="pctrl">
+          <button class="pbtn" type="button" id="speedBtn" aria-pressed="false">2× sebesség</button>
+          <button class="pbtn" type="button" id="skipBtn">Ugrás a kész laphoz</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ADATVÉDELEM ================= -->
+<section class="section" id="adatvedelem">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Adatvédelem</p>
+      <h2>Két külön világ, amelyet csak az orvos köt össze</h2>
+      <p class="intro">A személyes adatok a rendelői szoftverben maradnak, ahogy eddig. Az asszisztens csak a panaszt és az anamnézist látja, név nélkül, egy véletlenszerű vizit-azonosítóval.</p>
+    </div>
+
+    <div class="worlds">
+      <div class="world">
+        <p class="eyebrow">Itt marad</p>
+        <h3>Rendelői szoftver</h3>
+        <p>A beteg azonosító adatai. Ezeket az asszisztens soha nem kapja meg.</p>
+        <ul class="data-list">
+          <li class="datum"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="8" cy="5.5" r="2.8"/><path d="M2.5 14c.8-2.8 3-4.2 5.5-4.2s4.7 1.4 5.5 4.2"/></svg>Név<span class="mono">nem kerül át</span></li>
+          <li class="datum"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="2" y="3.5" width="12" height="9" rx="1.5"/><path d="M5 7h6M5 9.5h3.5"/></svg>TAJ-szám<span class="mono">nem kerül át</span></li>
+          <li class="datum"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M2.5 7.5 8 3l5.5 4.5V13h-11z"/><path d="M6.5 13V9.5h3V13"/></svg>Lakcím<span class="mono">nem kerül át</span></li>
+          <li class="datum"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="2.5" y="3.5" width="11" height="10" rx="1.5"/><path d="M2.5 6.5h11M5.5 2v3M10.5 2v3"/></svg>Születési dátum<span class="mono">nem kerül át</span></li>
+        </ul>
+      </div>
+
+      <div class="barrier" aria-hidden="true">
+        <div class="barrier-badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+          Nincs<br>kapcsolat
+        </div>
+      </div>
+
+      <div class="world">
+        <p class="eyebrow">Ide kerül, 48 órára</p>
+        <h3>Anamnézis-asszisztens</h3>
+        <p>Csak a vizit szakmai tartalma, egy véletlenszerű azonosítóval.</p>
+        <div class="record">
+          <div class="record-top"><span>Vizit <b>V-7K2Q</b></span><span>törlés: <span class="countdown">47:59:12</span></span></div>
+          <p><strong>Jelen panasz:</strong> 3 napja fennálló produktív köhögés, sárgás köpet. Tegnap este láz, 38,5 °C…</p>
+          <p><strong>Anamnézis:</strong> Hypertonia arterialis. Cholecystectomia (2019)…</p>
+          <span class="gone">Hangfájl: törölve az átírás után</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="meet">
+      <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 16h18M17 10l6 6-6 6"/><rect x="24.5" y="6" width="4" height="20" rx="1.5"/></svg>
+      <p><strong>Hol találkozik a kettő?</strong> Kizárólag a rendelői szoftverben, abban a pillanatban, amikor az orvos beilleszti a lapot a beteg kartonjába. A két rendszer között nincs adatkapcsolat.</p>
+    </div>
+
+    <p class="honest">A hangot és a név nélküli egészségügyi szöveget is személyes adatként kezeljük, mert a GDPR szerint egy részletes kórtörténet önmagában is visszakövethető lehet. Ezért a védelem több rétegű.</p>
+
+    <div class="layers">
+      <div class="layer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+        <h3>Felvétel csak gombnyomásra</h3>
+        <p>A rendszer a személyes adatok felvétele után, az orvos gombnyomására kezd figyelni. Bármikor szüneteltethető.</p>
+      </div>
+      <div class="layer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M3 5h18M3 19h18"/><rect x="3" y="9" width="11" height="6" rx="1" fill="currentColor" stroke="none"/><path d="M17 12h4"/></svg>
+        <h3>Automatikus kitakarás</h3>
+        <p>Ha mégis elhangzik név, TAJ-szám, lakcím, telefonszám, születési dátum vagy e-mail-cím, jelölés kerül a helyére. Az orvos látja, hol történt.</p>
+      </div>
+      <div class="layer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M4 12h1.5M8 8.5v7M12 5v14M16 9v6M19.5 12H20"/><path d="M3.5 20.5l17-17"/></svg>
+        <h3>A hang nem marad meg</h3>
+        <p>A hangfelvétel csak az átírás idejére létezik, titkosítva. Utána azonnal és véglegesen törlődik.</p>
+      </div>
+      <div class="layer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 2"/></svg>
+        <h3>Törlés 48 óra után</h3>
+        <p>A szöveg legfeljebb 48 óráig érhető el az átnézéshez. Utána automatikusan és véglegesen törlődik, mentés nem marad róla.</p>
+      </div>
+      <div class="layer">
+        <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><circle cx="12" cy="5" r="1.2"/><circle cx="15.5" cy="5.94" r="1.2"/><circle cx="18.06" cy="8.5" r="1.2"/><circle cx="19" cy="12" r="1.2"/><circle cx="18.06" cy="15.5" r="1.2"/><circle cx="15.5" cy="18.06" r="1.2"/><circle cx="12" cy="19" r="1.2"/><circle cx="8.5" cy="18.06" r="1.2"/><circle cx="5.94" cy="15.5" r="1.2"/><circle cx="5" cy="12" r="1.2"/><circle cx="5.94" cy="8.5" r="1.2"/><circle cx="8.5" cy="5.94" r="1.2"/></svg>
+        <h3>EU-n belül, üzleti szolgáltatókkal</h3>
+        <p>Minden feldolgozás uniós adatközpontban fut. Csak fizetős, üzleti szolgáltatást használunk: a beküldött adatokon nem tanítanak modellt, és adatfeldolgozói szerződés köti őket.</p>
+      </div>
+      <div class="layer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3M12 15v2"/></svg>
+        <h3>Védett belépés</h3>
+        <p>Csak a rendelő felhasználói lépnek be, kétlépcsős azonosítással. Az adat átvitel közben és tárolva is titkosított, a hozzáférések naplózottak.</p>
+      </div>
+    </div>
+
+    <div class="life">
+      <h3>Egy vizit szövegének élete</h3>
+      <p class="demo-note">A rendszerben semmi nem marad meg tovább, mint amíg az orvosnak szüksége van rá.</p>
+      <ol class="life-track">
+        <li class="life-pulse" aria-hidden="true"></li>
+        <li class="life-step"><b>0:00</b><span>Felvétel indul, a személyes adatok után</span></li>
+        <li class="life-step"><b>Vizit vége</b><span>Átírás kész, a hangfájl törlődik</span></li>
+        <li class="life-step"><b>+ kb. 30 mp</b><span>Elkészül az ambuláns lap</span></li>
+        <li class="life-step"><b>Átnézés után</b><span>Az orvos beilleszti a rendelői szoftverbe</span></li>
+        <li class="life-step del"><b>+ 48 óra</b><span>A szöveg végleg törlődik</span></li>
+      </ol>
+    </div>
+
+    <div class="nots">
+      <div class="section-head" style="margin:0">
+        <p class="eyebrow">Határok</p>
+        <h3 style="font-size:clamp(1.4rem,2.4vw,1.8rem)">Amit a rendszer szándékosan nem csinál</h3>
+        <p class="intro" style="font-size:.98rem">Dokumentációs segéd, nem döntéstámogató eszköz. A szakmai döntés minden esetben az orvosé.</p>
+      </div>
+      <ul>
+        <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg><span>Nem állít fel diagnózist, és nem javasol kezelést. Csak azt rendszerezi, ami elhangzott.</span></li>
+        <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg><span>Nem kapcsolódik a betegnyilvántartáshoz, és nem kér le betegadatot.</span></li>
+        <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg><span>Nem őrzi meg a hangfelvételt.</span></li>
+        <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg><span>Nem küld adatot az Európai Unión kívülre.</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ================= TECHNIKA ================= -->
+<section class="section" id="technika">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Technika</p>
+      <h2>Mi történik a háttérben</h2>
+      <p class="intro">Webes alkalmazás, telepítés nélkül. A rendelői gépen egy asztali mikrofonnal működik, de telefonon és tableten is használható.</p>
+    </div>
+
+    <ol class="arch">
+      <li class="node">
+        <span class="where">Rendelő</span>
+        <h3>Böngésző és mikrofon</h3>
+        <p>A felvétel 10–20 másodperces darabokban, titkosított kapcsolaton megy fel.</p>
+      </li>
+      <li class="node eu">
+        <span class="where">Google Cloud</span>
+        <h3>Webalkalmazás</h3>
+        <p>Belépés és vizitek kezelése. Betegazonosítót nem tárol.</p>
+        <span class="eu-tag">EU régió</span>
+      </li>
+      <li class="node eu">
+        <span class="where">Google Cloud</span>
+        <h3>Beszédfelismerés</h3>
+        <p>Magyar nyelvű átírás, a beszélők szétválasztásával.</p>
+        <span class="eu-tag">EU régió</span>
+      </li>
+      <li class="node eu">
+        <span class="where">Vertex AI</span>
+        <h3>Szövegelemzés</h3>
+        <p>Claude nyelvi modell (Anthropic): kitakarás, latin szakkifejezések, a lap szerkesztése.</p>
+        <span class="eu-tag">EU régió</span>
+      </li>
+      <li class="node eu">
+        <span class="where">Google Cloud</span>
+        <h3>Átmeneti tároló</h3>
+        <p>Titkosított, véletlenszerű azonosítóval. 48 óra után automatikus törlés.</p>
+        <span class="eu-tag">EU régió</span>
+      </li>
+      <li class="node">
+        <span class="where">Rendelő</span>
+        <h3>Orvos képernyője</h3>
+        <p>Átnézés, javítás, másolás a rendelői szoftverbe.</p>
+      </li>
+    </ol>
+
+    <div class="tech-notes">
+      <div class="tnote">
+        <h3>Miért nem ingyenes eszközökkel?</h3>
+        <p>Az ingyenes, fogyasztói AI-szolgáltatások egy része a beküldött szöveget felhasználhatja a modellek fejlesztésére. Itt kizárólag fizetős, üzleti API-kat használunk, uniós adatközpontban, adatfeldolgozói szerződéssel.</p>
+      </div>
+      <div class="tnote">
+        <h3>A beszédfelismerést mérés alapján választjuk</h3>
+        <p>A pilot előtt 3–4 eljátszott háziorvosi vizitet több beszédfelismerő motorral írunk át, és a magyar orvosi beszédet legpontosabban felismerőt választjuk. A latin kifejezéseket egy második lépés külön ellenőrzi.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ÜTEMTERV ================= -->
+<section class="section" id="utemterv">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Ütemterv</p>
+      <h2>Négy szakaszban a rendelőig</h2>
+      <p class="intro">Először azt mérjük meg, ami a legtöbbet számít: mennyire pontosan érti a gép a magyar orvosi beszédet.</p>
+    </div>
+    <ol class="road">
+      <li class="phase">
+        <span class="when">1. szakasz <span>1. hét</span></span>
+        <h3>Beszédfelismerés mérése</h3>
+        <ul>
+          <li>3–4 eljátszott háziorvosi vizit felvétele</li>
+          <li>Több beszédfelismerő motor összevetése</li>
+          <li>A latin szakkifejezések pontosságának mérése</li>
+        </ul>
+        <p class="out"><b>Eredmény:</b> kiválasztott motor, mért pontossággal.</p>
+      </li>
+      <li class="phase">
+        <span class="when">2. szakasz <span>2–3. hét</span></span>
+        <h3>Prototípus</h3>
+        <ul>
+          <li>Felvétel, szünet, befejezés</li>
+          <li>Átirat, kitakarás, ambuláns lap</li>
+          <li>Másolás szakaszonként és egyben</li>
+          <li>Belépés, 48 órás automatikus törlés</li>
+        </ul>
+        <p class="out"><b>Eredmény:</b> kipróbálható webes alkalmazás.</p>
+      </li>
+      <li class="phase">
+        <span class="when">3. szakasz <span>4–7. hét</span></span>
+        <h3>Próbaüzem a rendelőben</h3>
+        <ul>
+          <li>Valódi rendelés egy orvossal</li>
+          <li>A lap szakaszainak igazítása a rendelői szoftver mezőihez</li>
+          <li>Az orvos stílusának és rövidítéseinek átvétele</li>
+        </ul>
+        <p class="out"><b>Eredmény:</b> napi használatra kész rendszer.</p>
+      </li>
+      <li class="phase">
+        <span class="when">4. szakasz <span>később</span></span>
+        <h3>Bővítés</h3>
+        <ul>
+          <li>Több orvos, több rendelő</li>
+          <li>Közvetlen kapcsolat a rendelői szoftverrel, ha a szállító lehetővé teszi</li>
+          <li>Szakterületenkénti sablonok</li>
+        </ul>
+        <p class="out"><b>Eredmény:</b> a kézi másolás is elhagyható.</p>
+      </li>
+    </ol>
+    <p class="road-note">Az időtartamok tervezettek; a 3. szakasz a rendelés ritmusához igazodik.</p>
+  </div>
+</section>
+
+<!-- ================= KÖLTSÉG ================= -->
+<section class="section" id="koltseg">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Üzemeltetés</p>
+      <h2>Mennyibe kerül egy vizit feldolgozása?</h2>
+      <p class="intro">A költség a beszélgetés hosszától függ. Az alábbi becslés a szolgáltatók jelenlegi listaárain alapul, a próbaüzem alatt valós számokkal pontosítjuk.</p>
+    </div>
+    <div class="calc">
+      <form class="calc-in" id="calcForm" onsubmit="return false">
+        <div class="field">
+          <label for="visits">Vizitek naponta <output id="visitsOut" for="visits">30</output></label>
+          <input type="range" id="visits" min="5" max="60" step="1" value="30">
+        </div>
+        <div class="field">
+          <label for="days">Rendelési napok havonta <output id="daysOut" for="days">20</output></label>
+          <input type="range" id="days" min="8" max="26" step="1" value="20">
+        </div>
+        <div class="field">
+          <label for="mins">Rögzített beszélgetés vizitenként <output id="minsOut" for="mins">7 perc</output></label>
+          <input type="range" id="mins" min="3" max="20" step="1" value="7">
+          <small>A személyes adatok felvétele nem számít bele, mert azt nem rögzítjük.</small>
+        </div>
+      </form>
+      <div class="calc-out" aria-live="polite">
+        <p class="eyebrow">Becsült havi API-költség</p>
+        <p class="big" id="monthOut">47 400 Ft</p>
+        <p class="sub">Tartomány: <span id="rangeOut">35 600 – 66 400 Ft</span> · <span id="countOut">600</span> vizit · vizitenként kb. <span id="perOut">79 Ft</span></p>
+        <div class="split">
+          <div class="split-bar"><i id="barStt" style="width:53%"></i><i id="barLlm" style="width:47%"></i></div>
+          <div class="split-legend"><span>Beszédfelismerés <b id="sttPct">53%</b></span><span>Szövegelemzés <b id="llmPct">47%</b></span></div>
+        </div>
+        <p class="fine">Ehhez jön a szerver és az átmeneti tároló, kb. 2–5 ezer Ft havonta. A becslés tájékoztató jellegű, dollárban számlázott szolgáltatásokon alapul.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= EGYEZTETÉS + GYIK ================= -->
+<section class="section" id="kerdesek">
+  <div class="wrap two">
+    <div>
+      <p class="eyebrow">Következő lépések</p>
+      <h2>Amit még egyeztetünk</h2>
+      <ul class="todo">
+        <li><span class="box" aria-hidden="true"></span><p><span class="who-does">Rendelő</span>Képernyőkép a rendelői szoftver üres ambuláns lapjáról, betegadat nélkül, hogy a szakaszok pontosan a mezőkhöz illeszkedjenek.</p></li>
+        <li><span class="box" aria-hidden="true"></span><p><span class="who-does">Rendelő</span>A 48 órás megőrzési idő jóváhagyása.</p></li>
+        <li><span class="box" aria-hidden="true"></span><p><span class="who-does">Kidologic</span>Betegtájékoztató tervezete a felvételről, kifüggesztéshez és szóbeli tájékoztatáshoz.</p></li>
+        <li><span class="box" aria-hidden="true"></span><p><span class="who-does">Közösen</span>Adatfeldolgozói szerződés a rendelő és a Kidologic között.</p></li>
+        <li><span class="box" aria-hidden="true"></span><p><span class="who-does">Kidologic</span>Asztali mikrofon javaslata a rendelői géphez.</p></li>
+      </ul>
+    </div>
+    <div>
+      <p class="eyebrow">Gyakori kérdések</p>
+      <h2>Amit érdemes tudni</h2>
+      <details class="faq" open>
+        <summary>Mi történik, ha a beteg mégis kimondja egy nevet vagy a telefonszámát?</summary>
+        <p>A rendszer a feldolgozás során kitakarja: [NÉV], [TELEFONSZÁM] és hasonló jelölés kerül a helyére. A kitakart rész nem kerül a lapra, és nem tárolódik. Az orvos az „Ellenőrizendő” dobozban látja, hol történt kitakarás.</p>
+      </details>
+      <details class="faq">
+        <summary>Mennyire pontos a felismerés, és mi van, ha téved?</summary>
+        <p>A beszédfelismerést a próbaüzem előtt mérjük, és a legpontosabb motort választjuk. A latin kifejezéseket egy második lépés javítja, a bizonytalan részek kiemelve jelennek meg. A lap végső formáját mindig az orvos hagyja jóvá, mielőtt beilleszti.</p>
+      </details>
+      <details class="faq">
+        <summary>Ad-e a rendszer diagnózist vagy terápiás javaslatot?</summary>
+        <p>Nem. Csak azt rendszerezi, ami a vizit során elhangzott. Az orvos által kimondott diagnózishoz BNO-kódot javasol, amelyet az orvos ellenőriz.</p>
+      </details>
+      <details class="faq">
+        <summary>Kell-e telepíteni valamit?</summary>
+        <p>Nem, böngészőben fut. A rendelői géphez egy asztali mikrofont javaslunk; telefonon és tableten is használható.</p>
+      </details>
+      <details class="faq">
+        <summary>Mi történik, ha megszakad az internet?</summary>
+        <p>A felvétel rövid darabokban töltődik fel. Rövid kimaradás után a hiányzó darabok automatikusan pótlódnak; hosszabb kimaradásnál a rendszer jelez, és a vizit folytatható.</p>
+      </details>
+      <details class="faq">
+        <summary>Miért nem kerül be automatikusan a rendelői szoftverbe?</summary>
+        <p>Első körben szándékosan kézi a beillesztés. Így a két rendszer között nincs adatkapcsolat, és az orvos minden lapot átnéz, mielőtt a kartonba kerül. Közvetlen kapcsolat később, a szoftver szállítójával egyeztetve lehetséges.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <span><b>Kidologic</b> · kidologic.hu</span>
+    <span>Ajánlat, 2026. október · A bemutatóban szereplő beszélgetés, nevek és adatok kitaláltak.</span>
+  </div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  "use strict";
+  var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var root = document.documentElement;
+  var $ = function(s, el){ return (el || document).querySelector(s); };
+  var $$ = function(s, el){ return Array.prototype.slice.call((el || document).querySelectorAll(s)); };
+
+  /* ---------- színek a tokenekből ---------- */
+  var colors = {};
+  function readColors(){
+    var cs = getComputedStyle(root);
+    ["scrub","patient","trace","rule","ink-3"].forEach(function(k){ colors[k] = cs.getPropertyValue("--" + k).trim(); });
+    waves.forEach(function(w){ w.draw(); });
+  }
+  var waves = [];
+  var mq = window.matchMedia ? matchMedia("(prefers-color-scheme: dark)") : null;
+  if (mq) { if (mq.addEventListener) mq.addEventListener("change", readColors); else if (mq.addListener) mq.addListener(readColors); }
+  if (window.MutationObserver) new MutationObserver(readColors).observe(root, { attributes: true, attributeFilter: ["data-theme"] });
+
+  /* ---------- hanghullám ---------- */
+  function Voice(){
+    var speaker = "pat", segLeft = 40, pause = 0, t = 0;
+    return {
+      next: function(){
+        if (pause > 0) { pause--; if (pause === 0) { speaker = speaker === "doc" ? "pat" : "doc"; segLeft = 28 + Math.floor(Math.random() * 46); } return { a: 0, s: speaker, silent: true }; }
+        segLeft--; t++;
+        if (segLeft <= 0) pause = 6 + Math.floor(Math.random() * 10);
+        var syll = Math.abs(Math.sin(t * 0.52)) * 0.7 + Math.abs(Math.sin(t * 0.13)) * 0.3;
+        var a = Math.min(1, (0.25 + 0.75 * syll) * (0.45 + Math.random() * 0.55));
+        return { a: a, s: speaker, silent: false };
+      },
+      state: function(){ return pause > 0 ? "quiet" : speaker; }
+    };
+  }
+
+  function Wave(canvas, opt){
+    var ctx = canvas.getContext("2d");
+    var step = opt.step, bar = opt.bar, interval = opt.interval, gain = opt.gain;
+    var active = opt.active || function(){ return true; };
+    var voice = Voice();
+    var W = 0, H = 0, buf = [], acc = 0, last = 0, running = false;
+    function sample(){ return active() ? voice.next() : { a: 0, s: "doc", silent: true }; }
+    function size(){
+      var r = canvas.getBoundingClientRect();
+      var dpr = Math.min(2, window.devicePixelRatio || 1);
+      W = Math.max(1, r.width); H = Math.max(1, r.height);
+      canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      var n = Math.ceil(W / step) + 1;
+      while (buf.length < n) buf.unshift(opt.prefill === false ? { a: 0, s: "doc", silent: true } : voice.next());
+      if (buf.length > n) buf = buf.slice(buf.length - n);
+      draw();
+    }
+    function rr(x, y, w, h){
+      var r = Math.min(w / 2, h / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath(); ctx.fill();
+    }
+    function draw(){
+      if (!W) return;
+      ctx.clearRect(0, 0, W, H);
+      var mid = H / 2, n = buf.length;
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = colors.rule || "#ccc";
+      ctx.fillRect(0, mid - 0.5, W, 1);
+      for (var i = 0; i < n; i++) {
+        var s = buf[i];
+        if (s.silent || s.a < 0.03) continue;
+        var x = W - (n - i) * step;
+        var h = Math.max(2, s.a * H * gain);
+        ctx.globalAlpha = 0.25 + 0.75 * (i / n);
+        ctx.fillStyle = s.s === "doc" ? colors.scrub : colors.patient;
+        rr(x, mid - h / 2, bar, h);
+      }
+      ctx.globalAlpha = 1;
+      if (opt.head) {
+        ctx.fillStyle = colors.trace;
+        ctx.fillRect(W - 2, mid - H * 0.4, 2, H * 0.8);
+      }
+    }
+    function frame(now){
+      if (!running) return;
+      acc += Math.min(120, now - last); last = now;
+      var moved = false;
+      while (acc >= interval) { acc -= interval; buf.shift(); buf.push(sample()); moved = true; }
+      if (moved) draw();
+      requestAnimationFrame(frame);
+    }
+    var api = {
+      size: size, draw: draw, voice: voice,
+      start: function(){ if (running || reduce) return; running = true; last = performance.now(); requestAnimationFrame(frame); },
+      stop: function(){ running = false; }
+    };
+    if (window.ResizeObserver) new ResizeObserver(size).observe(canvas); else window.addEventListener("resize", size);
+    if (window.IntersectionObserver) {
+      new IntersectionObserver(function(es){ es.forEach(function(e){ if (e.isIntersecting) api.start(); else api.stop(); }); }).observe(canvas);
+    } else api.start();
+    waves.push(api);
+    return api;
+  }
+
+  readColors();
+  var hero = Wave($("#heroWave"), { step: 5, bar: 3, interval: 42, gain: 0.78, head: true });
+  hero.size();
+
+  /* hős: beszélő-címke és óra */
+  var tag = $("#heroSpeaker"), heroClock = $("#heroClock"), heroSec = 84;
+  setInterval(function(){
+    var st = hero.voice.state();
+    tag.className = "speaker-tag " + (st === "doc" ? "doc" : st === "quiet" ? "quiet" : "");
+    tag.textContent = st === "doc" ? "Orvos beszél" : st === "quiet" ? "Szünet" : "Beteg beszél";
+  }, reduce ? 100000 : 250);
+  if (!reduce) setInterval(function(){
+    heroSec++;
+    var h = Math.floor(heroSec / 3600), m = Math.floor(heroSec % 3600 / 60), s = heroSec % 60;
+    heroClock.textContent = [h, m, s].map(function(x){ return String(x).padStart(2, "0"); }).join(":");
+  }, 1000);
+
+  /* ---------- lépések kiemelése ---------- */
+  var steps = $$(".step"), si = 0;
+  if (!reduce && steps.length) {
+    var cycle = function(){ steps.forEach(function(s, i){ s.classList.toggle("active", i === si); }); si = (si + 1) % steps.length; };
+    cycle(); setInterval(cycle, 2600);
+  }
+
+  /* ---------- 48 órás visszaszámláló ---------- */
+  var endAt = Date.now() + (47 * 3600 + 59 * 60 + 12) * 1000;
+  function cd(){
+    var s = Math.max(0, Math.round((endAt - Date.now()) / 1000));
+    var h = Math.floor(s / 3600); s %= 3600; var m = Math.floor(s / 60); s %= 60;
+    var str = [h, m, s].map(function(x){ return String(x).padStart(2, "0"); }).join(":");
+    $$(".countdown").forEach(function(e){ e.textContent = str; });
+  }
+  cd(); setInterval(cd, 1000);
+
+  /* ---------- bemutató ---------- */
+  var demo = $("#demoRoot");
+  var box = $("#tbox");
+  var lines = $$(".line", demo);
+  var redacts = $$("mark.redact", demo);
+  var fixes = $$(".fix", demo);
+  var procItems = $$(".proc li", demo);
+  var blocks = $$(".sheet .sec, .sheet .check-box", demo);
+  var clock = $("#demoClock"), recLabel = $("#recLabel"), pfill = $("#pfill");
+  var phaseEls = $$("#phases span");
+  var playBtn = $("#playBtn"), restartBtn = $("#restartBtn"), speedBtn = $("#speedBtn"), skipBtn = $("#skipBtn");
+  var demoPhase = "done";
+
+  function splitWords(p){
+    Array.prototype.slice.call(p.childNodes).forEach(function(n){
+      if (n.nodeType === 3) {
+        var frag = document.createDocumentFragment();
+        n.textContent.split(/(\s+)/).forEach(function(part){
+          if (!part) return;
+          if (/^\s+$/.test(part)) frag.appendChild(document.createTextNode(part));
+          else { var s = document.createElement("span"); s.className = "w"; s.textContent = part; frag.appendChild(s); }
+        });
+        n.parentNode.replaceChild(frag, n);
+      } else if (n.nodeType === 1) n.classList.add("w");
+    });
+  }
+  lines.forEach(function(li){ splitWords($("p", li)); });
+
+  var mini = Wave($("#miniWave"), { step: 4, bar: 2, interval: 45, gain: 0.9, prefill: false, active: function(){ return demoPhase === "rec"; } });
+  mini.size();
+
+  var labels = { personal: "Nem rögzít", rec: "Rögzít", proc: "Feldolgozás", sheet: "Lap készül", done: "Kész" };
+  var phaseIdx = { personal: 0, rec: 1, proc: 2, sheet: 3, done: 3 };
+  function setPhase(p){
+    demoPhase = p;
+    demo.setAttribute("data-phase", p);
+    recLabel.textContent = labels[p];
+    phaseEls.forEach(function(el, i){ el.classList.toggle("on", i === phaseIdx[p]); });
+  }
+
+  var WORD = 66, GAP = 430, events = [], total = 1;
+  (function build(){
+    var t = 0;
+    function add(time, fn){ events.push({ t: time, fn: fn }); }
+    add(0, function(){ setPhase("personal"); });
+    t = 2600;
+    add(t, function(){ setPhase("rec"); });
+    lines.forEach(function(li){
+      add(t, function(){ li.classList.add("shown"); clock.textContent = li.getAttribute("data-t"); box.scrollTop = box.scrollHeight; });
+      var ws = $$(".w", li);
+      ws.forEach(function(w, k){ add(t + 150 + k * WORD, function(){ w.classList.add("on"); }); });
+      t += 150 + ws.length * WORD + GAP;
+    });
+    add(t, function(){ setPhase("proc"); });
+    t += 350;
+    procItems.forEach(function(p){
+      add(t, function(){ p.classList.add("active"); });
+      t += 720;
+      add(t, function(){
+        p.classList.remove("active"); p.classList.add("done");
+        var act = p.getAttribute("data-act");
+        if (act === "redact") redacts.forEach(function(r){ r.classList.add("hit"); });
+        if (act === "fix") fixes.forEach(function(f){ f.classList.add("fixed"); });
+      });
+    });
+    t += 250;
+    add(t, function(){ setPhase("sheet"); });
+    blocks.forEach(function(b){
+      add(t, function(){ b.classList.add("on"); });
+      t += 200;
+      $$("li", b).forEach(function(li){ add(t, function(){ li.classList.add("on"); }); t += 150; });
+      t += 180;
+    });
+    add(t, finish);
+    total = t;
+    events.sort(function(a, b){ return a.t - b.t; });
+  })();
+
+  var playing = false, elapsed = 0, idx = 0, last = 0, speed = 1, started = false;
+
+  function setUi(){
+    var label = $("span", playBtn);
+    var running = demo.classList.contains("running");
+    label.textContent = playing ? "Szünet" : (running && idx > 0 ? "Folytatás" : "Lejátszás");
+    playBtn.querySelector("svg").innerHTML = playing
+      ? '<rect x="3.5" y="2.5" width="3" height="11" rx="1" fill="currentColor"/><rect x="9.5" y="2.5" width="3" height="11" rx="1" fill="currentColor"/>'
+      : '<path d="M4 2.5v11l9-5.5z" fill="currentColor"/>';
+  }
+  function reset(){
+    playing = false; elapsed = 0; idx = 0;
+    demo.classList.add("running");
+    lines.forEach(function(l){ l.classList.remove("shown", "src"); });
+    $$(".w.on", demo).forEach(function(w){ w.classList.remove("on"); });
+    redacts.forEach(function(r){ r.classList.remove("hit"); });
+    fixes.forEach(function(f){ f.classList.remove("fixed"); });
+    procItems.forEach(function(p){ p.classList.remove("active", "done"); });
+    blocks.forEach(function(b){ b.classList.remove("on"); $$("li", b).forEach(function(li){ li.classList.remove("on"); }); });
+    clearSrc();
+    clock.textContent = "00:00";
+    box.scrollTop = 0;
+    pfill.style.width = "0%";
+    setPhase("personal");
+  }
+  function finish(){
+    playing = false;
+    demo.classList.remove("running");
+    pfill.style.width = "100%";
+    setPhase("done");
+    setUi();
+  }
+  function tick(now){
+    if (!playing) return;
+    elapsed += (now - last) * speed; last = now;
+    while (idx < events.length && events[idx].t <= elapsed) events[idx++].fn();
+    if (playing) { pfill.style.width = Math.min(100, elapsed / total * 100) + "%"; requestAnimationFrame(tick); }
+  }
+  function play(){
+    started = true;
+    if (!demo.classList.contains("running") || idx >= events.length) reset();
+    playing = true; last = performance.now();
+    setUi(); requestAnimationFrame(tick);
+  }
+  function pause(){ playing = false; setUi(); }
+
+  playBtn.addEventListener("click", function(){ playing ? pause() : play(); });
+  restartBtn.addEventListener("click", function(){ reset(); play(); });
+  skipBtn.addEventListener("click", function(){
+    started = true;
+    if (!demo.classList.contains("running")) return;
+    playing = false;
+    while (idx < events.length) events[idx++].fn();
+  });
+  speedBtn.addEventListener("click", function(){
+    speed = speed === 1 ? 2 : 1;
+    speedBtn.setAttribute("aria-pressed", speed === 2 ? "true" : "false");
+  });
+
+  if (!reduce && window.IntersectionObserver) {
+    var io = new IntersectionObserver(function(es){
+      es.forEach(function(e){ if (e.isIntersecting && !started) { io.disconnect(); play(); } });
+    }, { threshold: 0.45 });
+    io.observe($(".demo-grid > .pane", demo));
+  }
+
+  /* forrás-kiemelés */
+  function clearSrc(){
+    lines.forEach(function(l){ l.classList.remove("src"); });
+    $$(".sheet li.pin", demo).forEach(function(x){ x.classList.remove("pin"); });
+  }
+  $$(".sheet li[data-src]", demo).forEach(function(li){
+    var ids = li.getAttribute("data-src").split(",").map(Number);
+    var note = document.createElement("span");
+    note.className = "srcnote";
+    note.textContent = "forrás: " + ids.map(function(i){ return lines[i] ? lines[i].getAttribute("data-t") : ""; }).join(" · ");
+    ($(".v", li) || li).appendChild(note);
+    li.tabIndex = 0;
+    function on(){
+      clearSrc();
+      li.classList.add("pin");
+      ids.forEach(function(i){ if (lines[i]) lines[i].classList.add("src"); });
+      var first = lines[ids[0]];
+      if (first && (!demo.classList.contains("running") || first.classList.contains("shown"))) {
+        var top = first.offsetTop - 16;
+        if (box.scrollTo) box.scrollTo({ top: top, behavior: reduce ? "auto" : "smooth" }); else box.scrollTop = top;
+      }
+    }
+    li.addEventListener("mouseenter", on);
+    li.addEventListener("focus", on);
+    li.addEventListener("click", on);
+    li.addEventListener("mouseleave", clearSrc);
+    li.addEventListener("blur", clearSrc);
+  });
+
+  /* másolás */
+  var toastEl = $("#toast"), toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg; toastEl.classList.add("show");
+    clearTimeout(toastTimer); toastTimer = setTimeout(function(){ toastEl.classList.remove("show"); }, 1800);
+  }
+  function textOf(el){
+    var c = el.cloneNode(true);
+    $$(".srcnote", c).forEach(function(n){ n.parentNode.removeChild(n); });
+    return c.textContent.replace(/\s+/g, " ").trim();
+  }
+  function secText(sec){
+    var h = $("h3", sec).textContent.trim().toUpperCase();
+    var rows = $$("li", sec).map(function(li){
+      if (li.getAttribute("data-copy")) return li.getAttribute("data-copy");
+      var k = $(".k", li), v = $(".v", li);
+      return (k && v) ? k.textContent.trim() + ": " + textOf(v) : textOf(li);
+    });
+    return h + "\n" + rows.join("\n");
+  }
+  function fallbackCopy(text){
+    var ta = document.createElement("textarea");
+    ta.value = text; ta.setAttribute("readonly", "");
+    ta.style.position = "fixed"; ta.style.top = "0"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    var ok = false; try { ok = document.execCommand("copy"); } catch (e) {}
+    document.body.removeChild(ta);
+    return ok;
+  }
+  function copyText(text, btn){
+    function done(ok){
+      toast(ok ? "Vágólapra másolva" : "A böngésző itt nem engedi a másolást");
+      if (ok && btn) { btn.classList.add("done"); setTimeout(function(){ btn.classList.remove("done"); }, 1400); }
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function(){ done(true); }, function(){ done(fallbackCopy(text)); });
+    } else done(fallbackCopy(text));
+  }
+  $$(".sec .copy", demo).forEach(function(btn){
+    btn.addEventListener("click", function(e){ e.stopPropagation(); copyText(secText(btn.closest(".sec")), btn); });
+  });
+  $("#copyAll").addEventListener("click", function(){
+    copyText($$(".sheet .sec", demo).map(secText).join("\n\n"), this);
+  });
+
+  /* ---------- költségbecslő ---------- */
+  var fmt = function(n){ return Math.round(n).toLocaleString("hu-HU"); };
+  var r100 = function(n){ return Math.round(n / 100) * 100; };
+  function calc(){
+    var v = +$("#visits").value, d = +$("#days").value, m = +$("#mins").value;
+    $("#visitsOut").textContent = v;
+    $("#daysOut").textContent = d;
+    $("#minsOut").textContent = m + " perc";
+    var stt = m * 6, llm = 30 + m;            /* Ft / vizit: beszédfelismerés ~6 Ft/perc, elemzés ~30 Ft + 1 Ft/perc */
+    var per = stt + llm, n = v * d, month = per * n;
+    $("#monthOut").textContent = fmt(r100(month)) + " Ft";
+    $("#rangeOut").textContent = fmt(r100(month * 0.75)) + " – " + fmt(r100(month * 1.4)) + " Ft";
+    $("#countOut").textContent = fmt(n);
+    $("#perOut").textContent = fmt(per) + " Ft";
+    var sp = Math.round(stt / per * 100);
+    $("#barStt").style.width = sp + "%"; $("#barLlm").style.width = (100 - sp) + "%";
+    $("#sttPct").textContent = sp + "%"; $("#llmPct").textContent = (100 - sp) + "%";
+  }
+  ["visits", "days", "mins"].forEach(function(id){ $("#" + id).addEventListener("input", calc); });
+  calc();
+})();
+</script>
+</body>
+</html>
